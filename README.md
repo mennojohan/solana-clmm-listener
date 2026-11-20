@@ -24,7 +24,7 @@ Built for researchers, quantitative analysts, and liquidity providers who want t
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/solana-clmm-listener.git
+git clone https://github.com/mennojohan/solana-clmm-listener.git
 cd solana-clmm-listener
 ```
 
@@ -36,7 +36,7 @@ cp .env.example .env
 
 Example `.env` configuration:
 ```env
-RPC_ENDPOINT=wss://://helius-rpc.com
+RPC_ENDPOINT=wss://helius-rpc.com/?api-key=YOUR_HELIUS_API_KEY_HERE
 WHIRLPOOL_ADDRESS=HJPjoWUrhoZzkNfRpHuieeFk9WcZWjwy6PBjZ81ngndJ
 MAX_CONCURRENT_RPC=3
 RPC_DELAY_SECONDS=0.1
