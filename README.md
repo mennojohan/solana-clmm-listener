@@ -18,17 +18,19 @@ Built for researchers, quantitative analysts, and liquidity providers who want t
 
 ## Quickstart (Up & Running in < 5 Minutes)
 
-### 1. Prerequisites
+### Option A: Run Locally with Docker
+
+#### 1. Prerequisites
 * [Docker Desktop](https://docker.com) installed and running
 * A Solana RPC endpoint with WebSocket support (e.g., Helius, QuickNode, or Alchemy free tier)
 
-### 2. Clone the Repository
+#### 2. Clone the Repository
 ```bash
 git clone https://github.com/mennojohan/solana-clmm-listener.git
 cd solana-clmm-listener
 ```
 
-### 3. Configuration
+#### 3. Configuration
 Copy the example environment file and add your RPC endpoint:
 ```bash
 cp .env.example .env
@@ -48,7 +50,7 @@ DB_USER=clmm_user
 DB_PASSWORD=your_secure_password
 ```
 
-### 4. Build & Run with Docker
+#### 4. Build & Run with Docker
 Start the PostgreSQL database, Python listener, and lightweight Streamlit data inspector in the background. The database schema and sample dataset are initialized automatically on startup:
 ```bash
 docker compose up -d --build
@@ -58,24 +60,32 @@ docker compose up -d --build
 * **Live Listener Logs:** View the stream in your terminal with `docker compose logs -f listener`.
 * **Stop Services:** Run `docker compose down` to stop all containers while preserving your database volume.
 
+### Option B: Run in the Browser with GitHub Codespaces (Zero Local Setup)
+You can also launch and inspect the pre-loaded sample dataset directly in your browser without installing Docker locally:
+
+1. Click the green **`<> Code`** button at the top of this repository.
+2. Select the **Codespaces** tab and click **Create codespace on main**.
+3. Once the terminal loads, start the stack:
+   ```bash
+   cp .env.example .env && docker compose up -d --build
+   ```
+4. Open the forwarded **port `8501`** in the **Ports** tab to view the Streamlit Data Inspector with the pre-loaded `sample_data.sql` dataset.
+
 ---
 
 ## Architecture & Known MVP Trade-offs
 
-To keep this MVP free to run on standard RPC tiers and easy to deploy locally, it intentionally makes a few architectural trade-offs:
-* **WebSocket + HTTP RPC Fetching:** Swap logs trigger a rate-limited async `get_transaction` call (`MAX_CONCURRENT_RPC` + `RPC_DELAY_SECONDS`) to extract vault balance deltas. This works reliably on free RPC tiers while introducing ~0.5–1.5s latency compared to raw gRPC streams.
-* **In-Memory Pool State Correlation:** Swaps are correlated with the latest cached pool state. Under extreme single-block congestion, rapid consecutive swaps may share the post-block state.
-* **LP Position Bounds:** LP events are currently detected and logged, while full binary decoding of individual position tick ranges (`tick_lower`, `tick_upper`) is scheduled for Phase 2.
+To keep this MVP accessible and lightweight, it makes pragmatic architectural choices regarding RPC fetching, in-memory pool state correlation, and position bounds.
 
 ---
 
 ## Phase 2 Roadmap
 
-The data pipeline in this repository serves as the core ingestion layer for an upcoming open-source CLMM analytics suite:
+The binary decoding architecture in this repository serves as the core foundation for an upcoming open-source **Out-of-Range LP Scanner** and capital-efficiency suite:
 
-* **Full LP Position Decoding:** Binary decoding of `tick_arrays` and LP position instructions (`OpenPosition`, `IncreaseLiquidity`, `DecreaseLiquidity`) to track exact position bounds and liquidity distribution.
-* **Quantitative CLMM Analytics Modules:** Open-source Python modules for evaluating capital efficiency, fee performance, and execution costs across concentrated liquidity pools.
-* **gRPC & High-Throughput Scaling:** Optional Yellowstone gRPC ingestion and Redis buffering for multi-pool indexing without RPC rate-limit bottlenecks.
+* **Out-of-Range Liquidity Scanner:** Automated decoding of individual LP positions to detect and quantify idle, out-of-range liquidity earning 0% fees across concentrated liquidity pools.
+* **Multi-Protocol Expansion:** Modular adapters for additional Solana CLMM and bin-based DLMM protocols (such as Raydium and Meteora) to enable cross-protocol capital efficiency comparisons.
+* **High-Throughput Scaling:** Optional Yellowstone gRPC ingestion and Redis buffering for low-latency multi-pool indexing.
 
 ---
 
