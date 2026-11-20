@@ -1,0 +1,8 @@
+# Geheime sleutels & lokale omgeving
+.env
+.vscode/
+venv/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store

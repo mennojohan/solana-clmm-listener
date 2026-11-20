@@ -1,0 +1,47 @@
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: solana_clmm_db
+    environment:
+      POSTGRES_DB: solana_clmm
+      POSTGRES_USER: clmm_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./sample_data.sql:/docker-entrypoint-initdb.d/02_sample_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clmm_user -d solana_clmm"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  listener:
+    build: .
+    container_name: solana_clmm_listener
+    env_file: .env
+    environment:
+      DB_HOST: timescaledb
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  dashboard:
+    build: .
+    container_name: solana_clmm_dashboard
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+    env_file: .env
+    environment:
+      DB_HOST: timescaledb
+    ports:
+      - "8501:8501"
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  timescaledb_data:
